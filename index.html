@@ -16,8 +16,6 @@
         }
 
         canvas {
-            vertical-align: top;
-            position: absolute;
             width: 800px;
             height: 800px;
             /* image-rendering: pixelated; */
@@ -27,6 +25,10 @@
 
 <body>
     <canvas id="canvas"></canvas>
+    <div style="padding:8px;user-select: none;">
+        Click to place charges. Blue points are negative. Red points are positive.
+        <br> Regions with high charge density will be highlighted in red or blue.
+    </div>
 </body>
 
 </html>
