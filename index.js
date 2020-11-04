@@ -35,12 +35,15 @@ const coulombForceScale = 1000
 const electrons = []
 const protons = []
 
+// electrons.push( { x: 100, y: 400, vx: 0, vy: 0, fx: 0, fy: 0, q: -100, mInv: 0 } )
+
 {
     let radius = 10
     for ( let x = -radius; x <= radius; x++ ) {
         for ( let y = -radius; y <= radius; y++ ) {
             // if ( Math.abs( y ) < 7 && x > -7 ) continue
             // if ( Math.max( Math.abs( x ), Math.abs( y ) ) < 5 ) continue
+            if ( Math.hypot( x, y ) > 9.5 ) continue
             protons.push( { x: 405 + 20 * x, y: 405 + 20 * y, vx: 0, vy: 0, fx: 0, fy: 0, q: 1, mInv: 0 } )
             // if ( y < 0 ) continue
             electrons.push( { x: 405 + 20 * x + 1, y: 405 + 20 * y, vx: 0, vy: 1, fx: 0, fy: 0, q: -1, mInv: 1 } )
@@ -98,9 +101,10 @@ function renderChargeDensity( histogram, bucketWidth, saturationPoint, alpha ) {
     for ( let i = 0; i < histWidth; i++ ) {
         for ( let j = 0; j < histHeight; j++ ) {
             let histVal = histogram[ i + histWidth * j ]
-            let channelVal = 255 * Math.abs( histVal ) / saturationPoint
-            let a = alpha * channelVal / 255
-            let color = histVal > 0 ? `rgba(${ channelVal }, 0, 0, ${ a })` : `rgba(0, 0, ${ channelVal }, ${ a })`
+            let c = 255 * Math.abs( histVal ) / saturationPoint
+            // let cx = 255 - c
+            let a = alpha * c / 255
+            let color = histVal > 0 ? `rgba(${ c }, 0, 0, ${ a })` : `rgba(0, 0, ${ c }, ${ a })`
             let x = i * bucketWidth
             let y = j * bucketWidth
             ctx.beginPath()
