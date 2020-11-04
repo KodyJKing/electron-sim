@@ -32,25 +32,24 @@ function loop() {
 const maxVelocity = 10
 const minDistance = 10
 const coulombForceScale = 1000
-const charges = []
+const electrons = []
 const protons = []
 
 {
     let radius = 10
     for ( let x = -radius; x <= radius; x++ ) {
         for ( let y = -radius; y <= radius; y++ ) {
-            // if ( Math.abs( y ) < 5 && Math.abs( x ) > 2 ) continue
-            // if ( Math.max( Math.abs( x ), Math.abs( y ) ) < 5 ) continue
-            charges.push(
-                { x: 405 + 20 * x, y: 405 + 20 * y, vx: 0, vy: 0, fx: 0, fy: 0, q: 1, mInv: 0 },
-                { x: 405 + 20 * x + 1, y: 405 + 20 * y, vx: 0, vy: 1, fx: 0, fy: 0, q: -1, mInv: 1 },
-            )
+            // if ( Math.abs( y ) < 7 && x > -7 ) continue
+            if ( Math.max( Math.abs( x ), Math.abs( y ) ) < 5 ) continue
+            protons.push( { x: 405 + 20 * x, y: 405 + 20 * y, vx: 0, vy: 0, fx: 0, fy: 0, q: 1, mInv: 0 } )
+            if ( y < 0 ) continue
+            electrons.push( { x: 405 + 20 * x + 1, y: 405 + 20 * y, vx: 0, vy: 1, fx: 0, fy: 0, q: -1, mInv: 1 } )
         }
     }
 }
 
 window.addEventListener( "mousedown", e => {
-    charges.push( { x: Mouse.x, y: Mouse.y, vx: 0, vy: 0, fx: 0, fy: 0, q: -1, mInv: 51 }, )
+    electrons.push( { x: Mouse.x, y: Mouse.y, vx: 0, vy: 0, fx: 0, fy: 0, q: -1, mInv: 51 }, )
 } )
 
 function render( dt ) {
@@ -59,9 +58,8 @@ function render( dt ) {
     ctx.rect( 0, 0, canvas.width, canvas.height )
     ctx.fill()
 
-    for ( let pass of [ 1, -1 ] ) {
+    for ( let charges of [ protons, electrons ] ) {
         for ( let charge of charges ) {
-            if ( Math.sign( charge.q ) != pass ) continue
             ctx.fillStyle = charge.q < 0 ? "blue" : "red"
             ctx.beginPath()
             let r = Math.sqrt( Math.abs( charge.q ) ) * 4 * ( charge.q < 0 ? 0.8 : 1 )
@@ -85,7 +83,7 @@ function renderChargeDensity( histogram, bucketWidth, saturationPoint, alpha ) {
     let buckets = histWidth * histHeight
     for ( let i = 0; i < buckets; i++ )
         histogram[ i ] = ( histogram[ i ] ?? 0 ) * 0.7
-    for ( let charge of charges ) {
+    for ( let charge of electrons ) {
         let { x, y } = charge
         let i = Math.floor( x / bucketWidth )
         let j = Math.floor( y / bucketWidth )
@@ -108,31 +106,37 @@ function renderChargeDensity( histogram, bucketWidth, saturationPoint, alpha ) {
     }
 }
 
+function applyCoulombForce( a, b ) {
+    let dx = a.x - b.x
+    let dy = a.y - b.y
+    let rSquared = Math.max( dx * dx + dy * dy, minDistance ** 2 )
+    let r = Math.sqrt( rSquared )
+    let ndx = dx / r
+    let ndy = dy / r
+    let fMag = a.q * b.q * coulombForceScale / rSquared
+    let fx = ndx * fMag
+    let fy = ndy * fMag
+    a.fx += fx
+    a.fy += fy
+    b.fx -= fx
+    b.fy -= fy
+}
+
 function update( dt ) {
     dt = dt / 100
 
-    for ( let i = 0; i < charges.length; i++ ) {
-        let a = charges[ i ]
-        for ( let j = i + 1; j < charges.length; j++ ) {
-            let b = charges[ j ]
-            if ( a.mInv == 0 && b.mInv == 0 ) continue
-            let dx = a.x - b.x
-            let dy = a.y - b.y
-            let rSquared = Math.max( dx * dx + dy * dy, minDistance ** 2 )
-            let r = Math.sqrt( rSquared )
-            let ndx = dx / r
-            let ndy = dy / r
-            let fMag = a.q * b.q * coulombForceScale / rSquared
-            let fx = ndx * fMag
-            let fy = ndy * fMag
-            a.fx += fx
-            a.fy += fy
-            b.fx -= fx
-            b.fy -= fy
-        }
+    for ( let i = 0; i < electrons.length; i++ ) {
+        let a = electrons[ i ]
+        for ( let j = i + 1; j < electrons.length; j++ )
+            applyCoulombForce( a, electrons[ j ] )
+        for ( let j = 0; j < protons.length; j++ )
+            applyCoulombForce( a, protons[ j ] )
     }
 
-    for ( let charge of charges ) {
+    for ( let charge of electrons ) {
+
+        // if ( charge.y < 300 && charge.x < 600 )
+        //     charge.fx += 5
 
         let ax = charge.fx * charge.mInv
         let ay = charge.fy * charge.mInv
