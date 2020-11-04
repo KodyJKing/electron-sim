@@ -2,7 +2,6 @@
 const canvasWidth = 800
 const canvasHeight = 800
 window.onload = () => {
-    console.log( "Hi there." )
     resizeCanvas( canvasWidth, canvasHeight, 2 )
     const ctx = canvas.getContext( "2d" )
     ctx.scale( 2, 2 )
@@ -29,36 +28,41 @@ function loop() {
 }
 // END BOILER PLATE
 
-const maxVelocity = 10
-const minDistance = 10
+const maxVelocity = 20
+const minDistance = 11
 const coulombForceScale = 1000
 const electrons = []
 const protons = []
 
-// electrons.push( { x: 100, y: 400, vx: 0, vy: 0, fx: 0, fy: 0, q: -100, mInv: 0 } )
-
+// Generate neutral disk
 {
-    let radius = 10
+    let radius = 14
     for ( let x = -radius; x <= radius; x++ ) {
         for ( let y = -radius; y <= radius; y++ ) {
             // if ( Math.abs( y ) < 7 && x > -7 ) continue
             // if ( Math.max( Math.abs( x ), Math.abs( y ) ) < 5 ) continue
-            if ( Math.hypot( x, y ) > 9.5 ) continue
+            if ( Math.hypot( x, y ) > radius + 0.5 ) continue
             protons.push( { x: 405 + 20 * x, y: 405 + 20 * y, vx: 0, vy: 0, fx: 0, fy: 0, q: 1, mInv: 0 } )
-            // if ( y < 0 ) continue
+            // if ( Math.hypot( x, y ) > Math.floor(radius / 2) - 0.5 ) continue
             electrons.push( { x: 405 + 20 * x + 1, y: 405 + 20 * y, vx: 0, vy: 1, fx: 0, fy: 0, q: -1, mInv: 1 } )
         }
     }
 }
 
+// Add electrons on click
 window.addEventListener( "mousedown", e => {
-    electrons.push( { x: Mouse.x, y: Mouse.y, vx: 0, vy: 0, fx: 0, fy: 0, q: -1, mInv: 51 }, )
+    electrons.push( { 
+        x: Mouse.x, y: Mouse.y, 
+        vx: 0, vy: 0, 
+        fx: 0, fy: 0,
+         q: -1, mInv: 51 
+    }, )
 } )
 
 const hist = []
 function render( dt ) {
     const ctx = canvas.getContext( "2d" )
-    ctx.fillStyle = "black"//"#272822"
+    ctx.fillStyle = "black" // "#272822"
     ctx.rect( 0, 0, canvas.width, canvas.height )
     ctx.fill()
 
@@ -102,7 +106,6 @@ function renderChargeDensity( histogram, bucketWidth, saturationPoint, alpha ) {
         for ( let j = 0; j < histHeight; j++ ) {
             let histVal = histogram[ i + histWidth * j ]
             let c = 255 * Math.abs( histVal ) / saturationPoint
-            // let cx = 255 - c
             let a = alpha * c / 255
             let color = histVal > 0 ? `rgba(${ c }, 0, 0, ${ a })` : `rgba(0, 0, ${ c }, ${ a })`
             let x = i * bucketWidth
@@ -145,15 +148,12 @@ function update( dt ) {
     }
 
     for ( let charge of electrons ) {
-
-        // if ( charge.y < 300 && charge.x < 600 )
-        //     charge.fx += 5
-
         let ax = charge.fx * charge.mInv
         let ay = charge.fy * charge.mInv
         charge.vx += ax * dt
         charge.vy += ay * dt
 
+        // Limit velocity
         let vSquared = charge.vx ** 2 + charge.vy ** 2
         if ( vSquared > maxVelocity ** 2 ) {
             let v = Math.sqrt( vSquared )
