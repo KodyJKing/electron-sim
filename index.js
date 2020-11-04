@@ -40,9 +40,9 @@ const protons = []
     for ( let x = -radius; x <= radius; x++ ) {
         for ( let y = -radius; y <= radius; y++ ) {
             // if ( Math.abs( y ) < 7 && x > -7 ) continue
-            if ( Math.max( Math.abs( x ), Math.abs( y ) ) < 5 ) continue
+            // if ( Math.max( Math.abs( x ), Math.abs( y ) ) < 5 ) continue
             protons.push( { x: 405 + 20 * x, y: 405 + 20 * y, vx: 0, vy: 0, fx: 0, fy: 0, q: 1, mInv: 0 } )
-            if ( y < 0 ) continue
+            // if ( y < 0 ) continue
             electrons.push( { x: 405 + 20 * x + 1, y: 405 + 20 * y, vx: 0, vy: 1, fx: 0, fy: 0, q: -1, mInv: 1 } )
         }
     }
@@ -52,11 +52,14 @@ window.addEventListener( "mousedown", e => {
     electrons.push( { x: Mouse.x, y: Mouse.y, vx: 0, vy: 0, fx: 0, fy: 0, q: -1, mInv: 51 }, )
 } )
 
+const hist = []
 function render( dt ) {
     const ctx = canvas.getContext( "2d" )
     ctx.fillStyle = "black"//"#272822"
     ctx.rect( 0, 0, canvas.width, canvas.height )
     ctx.fill()
+
+    renderChargeDensity( hist, 50, 10, 1 )
 
     for ( let charges of [ protons, electrons ] ) {
         for ( let charge of charges ) {
@@ -83,12 +86,14 @@ function renderChargeDensity( histogram, bucketWidth, saturationPoint, alpha ) {
     let buckets = histWidth * histHeight
     for ( let i = 0; i < buckets; i++ )
         histogram[ i ] = ( histogram[ i ] ?? 0 ) * 0.7
-    for ( let charge of electrons ) {
-        let { x, y } = charge
-        let i = Math.floor( x / bucketWidth )
-        let j = Math.floor( y / bucketWidth )
-        let histVal = histogram[ i + histWidth * j ] ?? 0
-        histogram[ i + histWidth * j ] = histVal + charge.q
+    for ( let charges of [ electrons, protons ] ) {
+        for ( let charge of charges ) {
+            let { x, y } = charge
+            let i = Math.floor( x / bucketWidth )
+            let j = Math.floor( y / bucketWidth )
+            let histVal = histogram[ i + histWidth * j ] ?? 0
+            histogram[ i + histWidth * j ] = histVal + charge.q
+        }
     }
     for ( let i = 0; i < histWidth; i++ ) {
         for ( let j = 0; j < histHeight; j++ ) {
@@ -106,10 +111,12 @@ function renderChargeDensity( histogram, bucketWidth, saturationPoint, alpha ) {
     }
 }
 
-function applyCoulombForce( a, b ) {
+function applyCoulombForce( a, b, cutoff ) {
     let dx = a.x - b.x
     let dy = a.y - b.y
     let rSquared = Math.max( dx * dx + dy * dy, minDistance ** 2 )
+    if ( rSquared < cutoff ** 2 )
+        return
     let r = Math.sqrt( rSquared )
     let ndx = dx / r
     let ndy = dy / r
@@ -130,7 +137,7 @@ function update( dt ) {
         for ( let j = i + 1; j < electrons.length; j++ )
             applyCoulombForce( a, electrons[ j ] )
         for ( let j = 0; j < protons.length; j++ )
-            applyCoulombForce( a, protons[ j ] )
+            applyCoulombForce( a, protons[ j ], minDistance )
     }
 
     for ( let charge of electrons ) {
