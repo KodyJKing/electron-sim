@@ -9,6 +9,7 @@ window.addEventListener( "contextmenu", e => e.preventDefault() )
 window.addEventListener( "mousedown", e => { Mouse.leftDown = true } )
 window.addEventListener( "mouseup", e => Mouse.leftDown = false )
 window.addEventListener( "mousemove", e => {
-    Mouse.x = e.clientX
-    Mouse.y = e.clientY
+    let { top, left } = canvas.getBoundingClientRect()
+    Mouse.x = e.clientX - left
+    Mouse.y = e.clientY - top
 } )

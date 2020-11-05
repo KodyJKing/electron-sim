@@ -51,20 +51,22 @@ const protons = []
 
 // Add electrons on click
 window.addEventListener( "mousedown", e => {
-    electrons.push( { 
-        x: Mouse.x, y: Mouse.y, 
-        vx: 0, vy: 0, 
+    electrons.push( {
+        x: Mouse.x, y: Mouse.y,
+        vx: 0, vy: 0,
         fx: 0, fy: 0,
-         q: -1, mInv: 51 
-    }, )
+        q: -1, mInv: 51
+    } )
 } )
 
 const hist = []
 function render( dt ) {
     const ctx = canvas.getContext( "2d" )
-    ctx.fillStyle = "black" // "#272822"
-    ctx.rect( 0, 0, canvas.width, canvas.height )
+    ctx.beginPath()
+    ctx.fillStyle = "white" // "#272822"
+    ctx.rect( 0, 0, canvasWidth, canvasHeight )
     ctx.fill()
+    ctx.closePath()
 
     renderChargeDensity( hist, 50, 10, 1 )
 
@@ -107,7 +109,7 @@ function renderChargeDensity( histogram, bucketWidth, saturationPoint, alpha ) {
             let histVal = histogram[ i + histWidth * j ]
             let c = 255 * Math.abs( histVal ) / saturationPoint
             let a = alpha * c / 255
-            let color = histVal > 0 ? `rgba(${ c }, 0, 0, ${ a })` : `rgba(0, 0, ${ c }, ${ a })`
+            let color = histVal > 0 ? `rgba(255, ${ 255 - c }, ${ 255 - c }, ${ a })` : `rgba(${ 255 - c }, ${ 255 - c }, 255, ${ a })`
             let x = i * bucketWidth
             let y = j * bucketWidth
             ctx.beginPath()
