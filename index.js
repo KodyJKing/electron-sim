@@ -29,8 +29,8 @@ function loop() {
 // END BOILER PLATE
 
 const maxVelocity = 20
-const minDistance = 11
-const coulombForceScale = 1000
+const minDistance = 10
+const coulombForceScale = 8000
 const electrons = []
 const protons = []
 
@@ -55,7 +55,7 @@ window.addEventListener( "mousedown", e => {
         x: Mouse.x, y: Mouse.y,
         vx: 0, vy: 0,
         fx: 0, fy: 0,
-        q: -1, mInv: 51
+        q: -1, mInv: 1
     } )
 } )
 
