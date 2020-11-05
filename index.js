@@ -28,7 +28,7 @@ function loop() {
 }
 // END BOILER PLATE
 
-const maxVelocity = 20
+const maxVelocity = 100
 const minDistance = 10
 const coulombForceScale = 8000
 const electrons = []
